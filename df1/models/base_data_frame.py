@@ -1,0 +1,48 @@
+from . import crc16
+from .base_frame import BaseFrame
+from . tx_symbol import TxSymbol
+
+
+class BaseDataFrame(BaseFrame):
+    def __init__(self, *, buffer=None):
+        if not buffer:
+            buffer = [TxSymbol.DLE.value, TxSymbol.STX.value]
+            buffer.extend([0x00] * 6)
+            buffer.extend([TxSymbol.DLE.value, TxSymbol.ETX.value, 0x00, 0x00])
+        super().__init__(buffer=buffer)
+
+    def init_with_params(self, cmd, src=0x0, dst=0x0, tns=0x0, data=[]):
+        app_layer_data = [dst, src, cmd, 0x0]
+        app_layer_data.extend(self._swap_endian(tns))
+        app_layer_data.extend(data)
+        crc = crc16.compute_crc(bytes(app_layer_data))
+        self.buffer[-2:] = self._word2byte_list(crc)
+        self.buffer[2:-4] = self.__sanitize_application_layer_data(app_layer_data)
+
+    def _get_command_data(self):
+        app_data = list(self.__get_unsanitized_application_layer_data())
+        return app_data[6:]
+
+    def __get_unsanitized_application_layer_data(self):
+        last = None
+        for b in self.buffer[2:-4]:
+            if b != 0x10 or last != 0x10:
+                yield b
+            last = b
+
+    def is_valid(self):
+        app_layer_data = self.__get_unsanitized_application_layer_data()
+        crc = crc16.compute_crc(bytes(app_layer_data))
+        return self._word2byte_list(crc) == self.buffer[-2:]
+
+    def __sanitize_application_layer_data(self, data):
+        for b in data:
+            yield b
+            if b == 0x10:
+                yield b
+
+    def _swap_endian(self, word):
+        return [word & 255, word >> 8]
+
+    def _word2byte_list(self, word):
+        return [word >> 8, word & 255]

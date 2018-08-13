@@ -1,0 +1,35 @@
+from models.tx_symbol import TxSymbol
+from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq, ReplyTimeout, InvalidLengthFrame
+
+
+def parse(buffer):
+    if len(buffer) == 1 and buffer[0] == 0x00:
+        return ReplyTimeout()
+    elif len(buffer) != 2 and len(buffer) < 12:
+        return InvalidLengthFrame(buffer=buffer)
+    elif len(buffer) == 2:
+        return _ack_catalog(buffer)
+    else:
+        return _frame_catalog(buffer)
+
+
+def _ack_catalog(buffer):
+    if buffer == bytes([TxSymbol.DLE.value, TxSymbol.ACK.value]):
+        return ReplyAck()
+    elif buffer == bytes([TxSymbol.DLE.value, TxSymbol.NAK.value]):
+        return ReplyNak()
+    elif buffer == bytes([TxSymbol.DLE.value, TxSymbol.ENQ.value]):
+        return ReplyEnq()
+    else:
+        raise NotImplementedError("This two bytes frame is not implemented: %s" % buffer)  # pragma: nocover
+
+
+def _frame_catalog(buffer):
+    frame_catalog = {
+        0x4f: lambda b: Reply4f(buffer=b)
+    }
+    cmd, fcn = buffer[4], buffer[8]
+    if cmd in frame_catalog:
+        return frame_catalog[cmd](buffer)
+    else:
+        raise NotImplementedError("Frame not implemented: %s" % buffer)  # pragma: nocover
