@@ -1,7 +1,7 @@
 import unittest
 
-from models import Reply4f
-from models.file_type import FileType
+from src.df1.models import Reply4f
+from src.df1.models.file_type import FileType
 
 
 class TestReply4f(unittest.TestCase):

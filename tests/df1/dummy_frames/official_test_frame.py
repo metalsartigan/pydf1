@@ -1,4 +1,4 @@
-from models.base_command import BaseCommand
+from src.df1.models.base_command import BaseCommand
 
 
 class OfficialTestFrame(BaseCommand):

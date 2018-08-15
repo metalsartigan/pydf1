@@ -1,8 +1,8 @@
 import socket
 
-from models.base_plc import BasePlc
-from models.reply_4f import Reply4f
-from models.tx_symbol import TxSymbol
+from src.df1.models.base_plc import BasePlc
+from src.df1.models.reply_4f import Reply4f
+from src.df1.models.tx_symbol import TxSymbol
 
 
 class MockPlc(BasePlc):

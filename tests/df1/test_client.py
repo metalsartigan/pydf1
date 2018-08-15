@@ -2,11 +2,11 @@ import time
 from mock import patch
 from unittest import TestCase
 
-from df1_client import Df1Client
-from models.exceptions import SendReceiveError
+from src.df1.df1_client import Df1Client
+from src.df1.models.exceptions import SendReceiveError
 from .mocks.mock_plc import MockPlc
-from models import Command0FA1, ReplyAck, Reply4f, ReplyNak, ReplyTimeout, ReplyEnq, InvalidLengthFrame
-from models.file_type import FileType
+from src.df1.models import Command0FA1, ReplyAck, Reply4f, ReplyNak, ReplyTimeout, ReplyEnq, InvalidLengthFrame
+from src.df1.models.file_type import FileType
 
 
 class TestClient(TestCase):

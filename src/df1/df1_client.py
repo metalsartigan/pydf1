@@ -1,10 +1,10 @@
 from collections import deque
 import time
 
-from models import frame_factory, ReplyAck, ReplyNak, BaseSimpleReply, Df1Plc
-from models import ReplyEnq, ReplyTimeout, BaseDataFrame, InvalidLengthFrame
-from models.exceptions import SendReceiveError
-from models.tx_symbol import TxSymbol
+from .models import frame_factory, ReplyAck, ReplyNak, BaseSimpleReply, Df1Plc
+from .models import ReplyEnq, ReplyTimeout, BaseDataFrame, InvalidLengthFrame
+from .models.exceptions import SendReceiveError
+from .models.tx_symbol import TxSymbol
 
 
 class Df1Client:

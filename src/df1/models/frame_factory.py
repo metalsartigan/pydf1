@@ -1,4 +1,4 @@
-from models.tx_symbol import TxSymbol
+from .tx_symbol import TxSymbol
 from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq, ReplyTimeout, InvalidLengthFrame
 
 

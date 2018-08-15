@@ -4,8 +4,8 @@ import unittest
 
 from mock import patch
 
-from models import Df1Plc
-from models.exceptions import SendQueueOverflowError
+from src.df1.models import Df1Plc
+from src.df1.models.exceptions import SendQueueOverflowError
 """ Apparemment on peut pas patcher socket.send et socket.recv quand on debug..."""
 
 

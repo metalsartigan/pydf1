@@ -1,5 +1,5 @@
-from models.command_0fa1 import Command0FA1
-from models.file_type import FileType
+from src.df1.models.command_0fa1 import Command0FA1
+from src.df1.models.file_type import FileType
 from .base_test_frame import BaseTestFrame
 
 
