@@ -1,4 +1,5 @@
 from collections import deque
+import threading
 import time
 
 from .models import frame_factory, ReplyAck, ReplyNak, BaseSimpleReply, Df1Plc
@@ -14,6 +15,7 @@ class Df1Client:
         self._plc = plc or Df1Plc()
         self._plc.bytes_received.append(self._bytes_received)
         self._messages_sink = []
+        self._message_sink_lock = threading.Lock()
         self._last_tns = 0x00
         self._ack = ReplyAck()
         self._nak = ReplyNak()
@@ -73,11 +75,13 @@ class Df1Client:
         elif issubclass(type(message), BaseDataFrame):
             if message.is_valid():
                 self._send_ack()
-                self._messages_sink.append(message)
+                with self._message_sink_lock:
+                    self._messages_sink.append(message)
             else:
                 self._send_nak()
         else:
-            self._messages_sink.append(message)
+            with self._message_sink_lock:
+                self._messages_sink.append(message)
             self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
 
     def _expect_reply(self):
@@ -89,8 +93,9 @@ class Df1Client:
 
     def _expect_message(self):
         for __ in range(1):
-            if self._messages_sink:
-                return self._messages_sink.pop(0)
+            with self._message_sink_lock:
+                if self._messages_sink:
+                    return self._messages_sink.pop(0)
             time.sleep(1)
         return ReplyTimeout()
 

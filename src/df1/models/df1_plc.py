@@ -8,7 +8,7 @@ from . import BasePlc
 from .exceptions import SendQueueOverflowError
 
 BUFFER_SIZE = 4096
-RECEIVE_TIMEOUT = 1000
+RECEIVE_TIMEOUT = 1
 CONNECT_TIMEOUT = 5
 SEND_QUEUE_SIZE = 100
 

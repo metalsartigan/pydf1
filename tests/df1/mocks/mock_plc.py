@@ -81,7 +81,7 @@ class MockPlc(BasePlc):
             self._last_message = None
 
     def _sink_message(self, buffer):
-        if buffer[4] == 0x0f and buffer[8] == 0xa1:
+        if buffer[4] == 0x0f and buffer[8] == 0xa2:
             table = buffer[10]
             start = buffer[12] * 2  # assume file type is always integer for this mock
             stop = start + buffer[9]

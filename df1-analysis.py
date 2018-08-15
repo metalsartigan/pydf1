@@ -1,27 +1,39 @@
 import sys
 
-from .df1_client import Df1Client
-from models.command_0fa1 import Command0FA1
-
-with Df1Client() as client:
-    client.connect('192.168.5.48', 10232)
-    command = Command0FA1()
-    command.init_with_params(dst=0x1, src=0x0, tns)
+from src.df1.df1_client import Df1Client
+from src.df1.models.command_0fa2 import Command0FA2
+from src.df1.models.file_type import FileType
 
 
-sys.exit()
+def do():
+    with Df1Client(src=0x0, dst=0x1) as client:
+        client.connect('192.168.5.41', 10232)
+        command = client.create_command(Command0FA2, table=0x7, start=0, bytes_to_read=20, file_type=FileType.INTEGER)
+        reply = client.send_command(command)
+        print(reply.get_data(FileType.INTEGER))
+
+
+    sys.exit()
+
+do()
 
 import socket
 
-targetHostSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-targetHostSocket.connect(('192.168.5.48', 10232))
-#targetHostSocket.send(bytes([0x10, 0x02, 0x01, 0x00, 0x0f, 0x00, 0xe4, 0x3a, 0xa2, 0x14, 0x07, 0x89, 0x00, 0x00, 0x10, 0x03, 0x15, 0xb9]))
 
 
 def read_reply():
     data2 = targetHostSocket.recv(4096)
     print(data2)
 
+
+targetHostSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+targetHostSocket.connect(('192.168.5.41', 10232))
+targetHostSocket.send(bytes([0x10, 0x02, 0x01, 0x00, 0x0f, 0x00, 0x1, 0x0, 0xa2, 0x14, 0x07, 0x89, 0x00, 0x00, 0x10, 0x03, 0xd2, 0xb5]))
+
+read_reply()
+read_reply()
+
+sys.exit()
 
 while 1:
     # dans le data (la partie entre les blocs de controle) si on voit un 0x10, faut le doubler, mais apres le calcul du CRC seulement.

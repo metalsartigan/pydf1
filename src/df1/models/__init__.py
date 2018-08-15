@@ -1,5 +1,5 @@
 from .base_plc import BasePlc
-from .command_0fa1 import Command0FA1
+from .command_0fa2 import Command0FA2
 from .reply_ack import ReplyAck
 from .reply_nak import ReplyNak
 from .reply_4f import Reply4f
