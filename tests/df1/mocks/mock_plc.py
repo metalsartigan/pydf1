@@ -51,8 +51,6 @@ class MockPlc(BasePlc):
                 self._reply(self._last_response)
                 if self._last_message and self._last_response == [TxSymbol.DLE.value, TxSymbol.ACK.value]:
                     self._reply(self._last_message)
-        elif len(buffer) != 2 and len(buffer) < 12:  # we chose not to handle max frame size.
-            self._nak()
         elif buffer[1] == TxSymbol.NAK.value:
             self._reply(self._last_message)
         elif buffer[1] == TxSymbol.ACK.value and self.sends_corrupt_ack_once:
@@ -95,7 +93,7 @@ class MockPlc(BasePlc):
                 self.dont_reply_data_frame = False
             else:
                 self._reply(buffer)
-        else:
+        else:  # pragma: nocover
             raise NotImplementedError()
 
     def _reply(self, buffer):
