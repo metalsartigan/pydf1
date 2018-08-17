@@ -33,3 +33,48 @@ class TestFrame(BaseTestFrame):
         self.assertTrue(frame.is_valid())
         frame2 = FrameFromBuffer(buffer=frame.get_bytes())
         self.assertTrue(frame2.is_valid())
+
+    def test_get_tns_with_dle_left(self):
+        buffer = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x10, 0x10, 0x51, 0xa1,
+                  0x10, 0x10, 0x0, 0x0, 0x0, 0x10, 0x3, 0x14, 0x89]
+        frame = FrameFromBuffer(buffer=buffer)
+        expected = 0x5110
+        self.assertEqual(expected, frame.tns)
+        self.assertTrue(frame.is_valid())
+
+    def test_get_tns_with_dle_right(self):
+        buffer = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x51, 0x10, 0x10, 0xa1,
+                  0x10, 0x10, 0x0, 0x0, 0x0, 0x10, 0x3, 0x80, 0x71]
+        frame = FrameFromBuffer(buffer=buffer)
+        expected = 0x1051
+        self.assertEqual(expected, frame.tns)
+        self.assertTrue(frame.is_valid())
+
+    def test_get_tns_with_dle_left_right(self):
+        buffer = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x10, 0x10, 0x10, 0x10, 0xa1,
+                  0x10, 0x10, 0x0, 0x0, 0x0, 0x10, 0x3, 0x45, 0x8d]
+        frame = FrameFromBuffer(buffer=buffer)
+        expected = 0x1010
+        self.assertEqual(expected, frame.tns)
+        self.assertTrue(frame.is_valid())
+
+    def test_set_tns_with_dle_left(self):
+        frame = FrameWithoutData()
+        frame.tns = 0x1051
+        expected = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x51, 0x10, 0x10, 0xa1, 0x10, 0x3, 0xe9, 0x9b]
+        self.assertEqual(expected, frame.buffer)
+        self.assertTrue(frame.is_valid())
+
+    def test_set_tns_with_dle_right(self):
+        frame = FrameWithoutData()
+        frame.tns = 0x5110
+        expected = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x10, 0x10, 0x51, 0xa1, 0x10, 0x3, 0xad, 0xb3]
+        self.assertEqual(expected, frame.buffer)
+        self.assertTrue(frame.is_valid())
+
+    def test_set_tns_with_dle_left_right(self):
+        frame = FrameWithoutData()
+        frame.tns = 0x1010
+        expected = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x10, 0x10, 0x10, 0x10, 0xa1, 0x10, 0x3, 0xfd, 0xa7]
+        self.assertEqual(expected, frame.buffer)
+        self.assertTrue(frame.is_valid())

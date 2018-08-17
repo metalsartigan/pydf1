@@ -15,9 +15,24 @@ class BaseDataFrame(BaseFrame):
         app_layer_data = [dst, src, cmd, 0x0]
         app_layer_data.extend(self._swap_endian(tns))
         app_layer_data.extend(data)
+        self.___set_application_layer_data_and_crc(app_layer_data)
+
+    def ___set_application_layer_data_and_crc(self, app_layer_data):
         crc = crc16.compute_crc(bytes(app_layer_data))
         self.buffer[-2:] = self._word2byte_list(crc)
         self.buffer[2:-4] = self.__sanitize_application_layer_data(app_layer_data)
+
+    @property
+    def tns(self):
+        app_layer_data = list(self.__get_unsanitized_application_layer_data())
+        tns_bytes = app_layer_data[4:6]
+        return (tns_bytes[0] & 255) + (tns_bytes[1] << 8)
+
+    @tns.setter
+    def tns(self, value):
+        app_layer_data = list(self.__get_unsanitized_application_layer_data())
+        app_layer_data[4:6] = self._swap_endian(value)
+        self.___set_application_layer_data_and_crc(app_layer_data)
 
     def _get_command_data(self):
         app_data = list(self.__get_unsanitized_application_layer_data())
@@ -27,13 +42,16 @@ class BaseDataFrame(BaseFrame):
         last = None
         for b in self.buffer[2:-4]:
             if b != 0x10 or last != 0x10:
+                last = b
                 yield b
-            last = b
+            else:
+                last = None
 
     def is_valid(self):
         app_layer_data = self.__get_unsanitized_application_layer_data()
         crc = crc16.compute_crc(bytes(app_layer_data))
-        return self._word2byte_list(crc) == self.buffer[-2:]
+        expected = self._word2byte_list(crc)
+        return expected == self.buffer[-2:]
 
     def __sanitize_application_layer_data(self, data):
         for b in data:
