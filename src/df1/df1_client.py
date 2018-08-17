@@ -1,4 +1,5 @@
 from collections import deque
+import random
 import threading
 import time
 
@@ -16,7 +17,7 @@ class Df1Client:
         self._plc.bytes_received.append(self._bytes_received)
         self._messages_sink = []
         self._message_sink_lock = threading.Lock()
-        self._last_tns = 0x00
+        self._last_tns = self._get_initial_tns()
         self._ack = ReplyAck()
         self._nak = ReplyNak()
         self._enq = ReplyEnq()
@@ -30,10 +31,19 @@ class Df1Client:
         if self._plc:
             self._plc.close()
 
+    def _get_initial_tns(self):
+        """To enable patch.object"""
+        return random.randint(0, 0xffff)
+
+    def _get_new_tns(self):
+        self._last_tns += 1
+        if self._last_tns > 0xffff:
+            self._last_tns = 0x0
+        return self._last_tns
+
     def create_command(self, command_type, **kwargs):
         command = command_type()
-        self._last_tns += 1
-        command.init_with_params(src=self._src, dst=self._dst, tns=self._last_tns, **kwargs)
+        command.init_with_params(src=self._src, dst=self._dst, tns=self._get_new_tns(), **kwargs)
         return command
 
     def connect(self, address, port):
@@ -54,6 +64,7 @@ class Df1Client:
                 if type(reply) is ReplyAck:
                     return reply
                 elif type(reply) is ReplyNak:
+                    command.tns = self._get_new_tns()
                     retry_send = True
                     break
                 elif type(reply) is ReplyTimeout or not reply.is_valid():
