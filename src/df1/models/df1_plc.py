@@ -70,7 +70,10 @@ class Df1Plc(BasePlc):
     def _receive_bytes(self):
         in_sockets, out_sockets, ex = select.select([self._plc_socket], [], [], RECEIVE_TIMEOUT)
         if in_sockets:
-            buffer = self._socket_recv()
+            try:
+                buffer = self._socket_recv()
+            except ConnectionResetError:
+                buffer = bytes()
             if buffer:
                 self._on_bytes_received(buffer)
             else:
