@@ -48,10 +48,15 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(4, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[1]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[3]))
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyAck, 'in', 1)
+        self._assert_command(Reply4f, 'in', 2)
+        self._assert_command(ReplyAck, 'out', 3)
+
+    def _assert_command(self, command_type, direction, index):
+        cmd = self.client.comm_history[index]
+        self.assertEqual(command_type, type(cmd['command']))
+        self.assertEqual(direction, cmd['direction'])
 
     def test_message_transfer_with_nak(self):
         """Doc page 4-11"""
@@ -60,12 +65,12 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(6, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[1]))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[3]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyNak, 'in', 1)
+        self._assert_command(Command0FA2, 'out', 2)
+        self._assert_command(ReplyAck, 'in', 3)
+        self._assert_command(Reply4f, 'in', 4)
+        self._assert_command(ReplyAck, 'out', 5)
 
     def test_message_transfer_with_timeout_and_enq(self):
         """Doc page 4-12"""
@@ -75,12 +80,13 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(6, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyTimeout, type(self.client.comm_history[1]))
-        self.assertEquals(ReplyEnq, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[3]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
+
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyTimeout, 'in', 1)
+        self._assert_command(ReplyEnq, 'out', 2)
+        self._assert_command(ReplyAck, 'in', 3)
+        self._assert_command(Reply4f, 'in', 4)
+        self._assert_command(ReplyAck, 'out', 5)
 
     def test_message_transfer_with_retransmission(self):
         """Doc page 4-13"""
@@ -91,16 +97,17 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(10, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyTimeout, type(self.client.comm_history[1]))
-        self.assertEquals(ReplyEnq, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyTimeout, type(self.client.comm_history[3]))
-        self.assertEquals(ReplyEnq, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[5]))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[6]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[7]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[8]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[9]))
+
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyTimeout, 'in', 1)
+        self._assert_command(ReplyEnq, 'out', 2)
+        self._assert_command(ReplyTimeout, 'in', 3)
+        self._assert_command(ReplyEnq, 'out', 4)
+        self._assert_command(ReplyNak, 'in', 5)
+        self._assert_command(Command0FA2, 'out', 6)
+        self._assert_command(ReplyAck, 'in', 7)
+        self._assert_command(Reply4f, 'in', 8)
+        self._assert_command(ReplyAck, 'out', 9)
 
     def test_message_transfer_with_message_sink_full(self):
         """Doc page 4-14"""
@@ -109,14 +116,15 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(8, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[1]))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[3]))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[6]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[7]))
+
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyNak, 'in', 1)
+        self._assert_command(Command0FA2, 'out', 2)
+        self._assert_command(ReplyNak, 'in', 3)
+        self._assert_command(Command0FA2, 'out', 4)
+        self._assert_command(ReplyAck, 'in', 5)
+        self._assert_command(Reply4f, 'in', 6)
+        self._assert_command(ReplyAck, 'out', 7)
 
     def test_message_transfer_with_nak_on_reply(self):
         """Doc page 4-15"""
@@ -125,12 +133,12 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(6, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[1]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[3]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyAck, 'in', 1)
+        self._assert_command(Reply4f, 'in', 2)
+        self._assert_command(ReplyNak, 'out', 3)
+        self._assert_command(Reply4f, 'in', 4)
+        self._assert_command(ReplyAck, 'out', 5)
 
     def test_message_transfer_with_timeout_and_enq_for_reply(self):
         """Doc page 4-16"""
@@ -139,12 +147,13 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(6, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[1]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[3]))
-        self.assertEquals(ReplyEnq, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
+
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyAck, 'in', 1)
+        self._assert_command(Reply4f, 'in', 2)
+        self._assert_command(ReplyAck, 'out', 3)
+        self._assert_command(ReplyEnq, 'in', 4)
+        self._assert_command(ReplyAck, 'out', 5)
 
     def test_message_transfer_with_message_source_full_on_the_reply(self):
         """Doc page 4-17"""
@@ -157,12 +166,13 @@ class TestClient(TestCase):
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
         self.assertEquals(6, len(self.client.comm_history))
-        self.assertEquals(Command0FA2, type(self.client.comm_history[0]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[1]))
-        self.assertEquals(InvalidLengthFrame, type(self.client.comm_history[2]))
-        self.assertEquals(ReplyNak, type(self.client.comm_history[3]))
-        self.assertEquals(Reply4f, type(self.client.comm_history[4]))
-        self.assertEquals(ReplyAck, type(self.client.comm_history[5]))
+
+        self._assert_command(Command0FA2, 'out', 0)
+        self._assert_command(ReplyAck, 'in', 1)
+        self._assert_command(InvalidLengthFrame, 'in', 2)
+        self._assert_command(ReplyNak, 'out', 3)
+        self._assert_command(Reply4f, 'in', 4)
+        self._assert_command(ReplyAck, 'out', 5)
 
     def test_reply_timeout(self):
         self.plc.replies_timeout = True
