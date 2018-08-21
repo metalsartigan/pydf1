@@ -95,7 +95,7 @@ class Df1Plc(BasePlc):
             plc_socket.connect(self._address)
             self._connected = True
             self._plc_socket = plc_socket
-        except (ConnectionError, socket.timeout):
+        except (ConnectionError, socket.timeout, socket.error):
             plc_socket.close()
             time.sleep(1)
 
