@@ -1,5 +1,6 @@
 import select
 import socket
+import threading
 import time
 from collections import deque
 from threading import Thread
@@ -24,6 +25,7 @@ class Df1Plc(BasePlc):
         self.force_one_socket_thread_loop = False
         self.force_one_queue_send = False
         self.send_queue = deque()
+        self._send_queue_lock = threading.Lock()
 
     def connect(self, address, port):
         if not self._socket_thread:
@@ -39,10 +41,11 @@ class Df1Plc(BasePlc):
             self._socket_thread = None
 
     def send_bytes(self, buffer: bytes):
-        if len(self.send_queue) >= SEND_QUEUE_SIZE:
-            raise SendQueueOverflowError()
-        else:
-            self.send_queue.append(buffer)
+        with self._send_queue_lock:
+            if len(self.send_queue) >= SEND_QUEUE_SIZE:
+                raise SendQueueOverflowError()
+            else:
+                self.send_queue.append(buffer)
 
     def _socket_loop(self):
         while self._loop or self.force_one_socket_thread_loop or self.force_one_queue_send:
@@ -50,14 +53,18 @@ class Df1Plc(BasePlc):
             if not self._connected:
                 self._create_connected_socket()
             if self._connected:  # reevaluate after connection
-                while self.send_queue:
-                    buffer = self.send_queue.popleft()
-                    self._socket_send(buffer)
-                    self.force_one_queue_send = False
+                self._send_loop()
                 self._receive_bytes()
         self._connected = False
         if self._plc_socket:
             self._plc_socket.close()
+
+    def _send_loop(self):
+        with self._send_queue_lock:
+            while self.send_queue:
+                buffer = self.send_queue.popleft()
+                self._socket_send(buffer)
+                self.force_one_queue_send = False
 
     def _socket_send(self, buffer):  # pragma: nocover
         """To enable mock.patch on send() without hurting the debugger."""
