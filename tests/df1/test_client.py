@@ -3,22 +3,27 @@ from mock import patch
 from unittest import TestCase
 
 from src.df1.df1_client import Df1Client
+from src.df1.models import Command0FA2, ReplyAck, Reply4f, ReplyNak, ReplyEnq
 from src.df1.models.exceptions import SendReceiveError
-from tests.df1.dummy_frames import FrameWithoutData
-from .mocks.mock_plc import MockPlc
-from src.df1.models import Command0FA2, ReplyAck, Reply4f, ReplyNak, ReplyTimeout, ReplyEnq, InvalidLengthFrame
 from src.df1.models.file_type import FileType
+from .mocks.mock_plc import MockPlc
 
 
 class TestClient(TestCase):
     def setUp(self):
         super().setUp()
         self.plc = MockPlc()
+        self._init_mock_tns()
         self.client = Df1Client(plc=self.plc, src=0x0, dst=0x1)
         self.cmd = self.client.create_command(Command0FA2, bytes_to_read=0x2,
                                               table=0x00, file_type=FileType.INTEGER, start=0x01)
-        #self.cmd.init_with_params(dst=0x01, src=0x00, tns=0x1234, )
         self.client.connect('127.0.0.1', 10232)
+
+    def _init_mock_tns(self):
+        tns_patcher = patch.object(Df1Client, '_get_initial_tns')
+        self.addCleanup(tns_patcher.stop)
+        self.mock_tns = tns_patcher.start()
+        self.mock_tns.return_value = 0x01
 
     def test_context_manager(self):
         plc = MockPlc()
@@ -28,11 +33,13 @@ class TestClient(TestCase):
             self.assertTrue(plc.connected)
         self.assertFalse(plc.connected)
 
-    @patch.object(Df1Client, '_get_new_tns')
-    def test_create_command(self, mock_new_tns):
-        mock_new_tns.return_value = 0x01
-        command = self.client.create_command(Command0FA2, bytes_to_read=0x2, table=0x01, file_type=FileType.INTEGER, start=0x01)
-        expected = bytes([0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x1, 0x0, 0xa2, 0x02, 0x01, 0x89, 0x01, 0x00, 0x10, 0x03, 0xbb, 0x70])
+    def test_create_command(self):
+        with patch.object(Df1Client, '_get_new_tns') as mock_new_tns:
+            mock_new_tns.return_value = 0x1
+            command = self.client.create_command(Command0FA2, bytes_to_read=0x2,
+                                                 table=0x01, file_type=FileType.INTEGER, start=0x01)
+        expected = bytes([0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x1, 0x0, 0xa2, 0x02, 0x01, 0x89, 0x01, 0x00,
+                          0x10, 0x03, 0xbb, 0x70])
         actual = command.get_bytes()
         self.assertEqual(expected, actual)
 
@@ -76,38 +83,37 @@ class TestClient(TestCase):
         """Doc page 4-12"""
         self.plc.replies_ack_timeout_once = True
         self.plc.dont_reply_data_frame = True
-        reply = self.client.send_command(self.cmd)
+        with patch.object(time, 'sleep'):
+            reply = self.client.send_command(self.cmd)
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
-        self.assertEquals(6, len(self.client.comm_history))
+        self.assertEquals(5, len(self.client.comm_history))
 
         self._assert_command(Command0FA2, 'out', 0)
-        self._assert_command(ReplyTimeout, 'in', 1)
-        self._assert_command(ReplyEnq, 'out', 2)
-        self._assert_command(ReplyAck, 'in', 3)
-        self._assert_command(Reply4f, 'in', 4)
-        self._assert_command(ReplyAck, 'out', 5)
+        self._assert_command(ReplyEnq, 'out', 1)
+        self._assert_command(ReplyAck, 'in', 2)
+        self._assert_command(Reply4f, 'in', 3)
+        self._assert_command(ReplyAck, 'out', 4)
 
     def test_message_transfer_with_retransmission(self):
         """Doc page 4-13"""
         self.plc.replies_ack_timeout_once = True
         self.plc.dont_reply_data_frame = True
         self.plc.sends_corrupt_enq_next = True
-        reply = self.client.send_command(self.cmd)
+        with patch.object(time, 'sleep'):
+            reply = self.client.send_command(self.cmd)
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
-        self.assertEquals(10, len(self.client.comm_history))
+        self.assertEquals(8, len(self.client.comm_history))
 
         self._assert_command(Command0FA2, 'out', 0)
-        self._assert_command(ReplyTimeout, 'in', 1)
+        self._assert_command(ReplyEnq, 'out', 1)
         self._assert_command(ReplyEnq, 'out', 2)
-        self._assert_command(ReplyTimeout, 'in', 3)
-        self._assert_command(ReplyEnq, 'out', 4)
-        self._assert_command(ReplyNak, 'in', 5)
-        self._assert_command(Command0FA2, 'out', 6)
-        self._assert_command(ReplyAck, 'in', 7)
-        self._assert_command(Reply4f, 'in', 8)
-        self._assert_command(ReplyAck, 'out', 9)
+        self._assert_command(ReplyNak, 'in', 3)
+        self._assert_command(Command0FA2, 'out', 4)
+        self._assert_command(ReplyAck, 'in', 5)
+        self._assert_command(Reply4f, 'in', 6)
+        self._assert_command(ReplyAck, 'out', 7)
 
     def test_message_transfer_with_message_sink_full(self):
         """Doc page 4-14"""
@@ -162,22 +168,23 @@ class TestClient(TestCase):
 
     def test_invalid_length_frame(self):
         self.plc.replies_invalid_length_frame_once = True
-        reply = self.client.send_command(self.cmd)
+        with patch.object(time, 'sleep'):
+            reply = self.client.send_command(self.cmd)
         actual = reply.get_data(FileType.INTEGER)
         self.assertEquals([0xe515], actual)
-        self.assertEquals(6, len(self.client.comm_history))
+        self.assertEquals(5, len(self.client.comm_history))
 
         self._assert_command(Command0FA2, 'out', 0)
         self._assert_command(ReplyAck, 'in', 1)
-        self._assert_command(InvalidLengthFrame, 'in', 2)
-        self._assert_command(ReplyNak, 'out', 3)
-        self._assert_command(Reply4f, 'in', 4)
-        self._assert_command(ReplyAck, 'out', 5)
+        self._assert_command(ReplyNak, 'out', 2)
+        self._assert_command(Reply4f, 'in', 3)
+        self._assert_command(ReplyAck, 'out', 4)
 
     def test_reply_timeout(self):
         self.plc.replies_timeout = True
-        with self.assertRaises(SendReceiveError):
-            self.client.send_command(self.cmd)
+        with patch.object(time, 'sleep'):
+            with self.assertRaises(SendReceiveError):
+                self.client.send_command(self.cmd)
 
     def test_reply_nak(self):
         self.plc.replies_nak = True
@@ -193,11 +200,11 @@ class TestClient(TestCase):
     def test_multiple_message_replies(self):
         self.plc.always_replies_messages = True
         with self.assertRaises(SendReceiveError):
-            self.client.send_command(self.cmd)
+            with patch.object(time, 'sleep'):
+                self.client.send_command(self.cmd)
 
-    @patch.object(Df1Client, '_get_initial_tns')
-    def test_tns_increment(self, mock_initial_tns):
-        mock_initial_tns.return_value = 0x10
+    def test_tns_increment(self):
+        self.mock_tns.return_value = 0x10
         plc = MockPlc()
         plc.force_bad_crc_once = True
         with Df1Client(plc=plc, src=0x0, dst=0x1) as client:
@@ -208,9 +215,8 @@ class TestClient(TestCase):
             client.send_command(cmd)
             self.assertEqual(0x12, cmd.tns)
 
-    @patch.object(Df1Client, '_get_initial_tns')
-    def test_tns_wrap(self, mock_initial_tns):
-        mock_initial_tns.return_value = 0xfffe
+    def test_tns_wrap(self):
+        self.mock_tns.return_value = 0xfffe
         plc = MockPlc()
 
         def create_cmd():
@@ -223,3 +229,13 @@ class TestClient(TestCase):
             self.assertEqual(0x0, cmd.tns)
             cmd = create_cmd()
             self.assertEqual(0x1, cmd.tns)
+
+    def test_frame_segmentation(self):
+        self.plc.replies_segmented = True
+        reply1 = self.client.send_command(self.cmd)
+        reply2 = self.client.send_command(self.cmd)
+        actual1 = reply1.get_data(FileType.INTEGER)
+        actual2 = reply2.get_data(FileType.INTEGER)
+        self.assertEquals([0xe515], actual1)
+        self.assertEquals([0xe515], actual2)
+        self.assertEqual(0, len(self.client._receive_buffer))

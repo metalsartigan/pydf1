@@ -57,7 +57,7 @@ class Df1Plc(BasePlc):
                 self._receive_bytes()
         self._connected = False
         if self._plc_socket:
-            self._plc_socket.close()
+            self._close_socket(self._plc_socket)
 
     def _send_loop(self):
         with self._send_queue_lock:
@@ -67,11 +67,9 @@ class Df1Plc(BasePlc):
                 self.force_one_queue_send = False
 
     def _socket_send(self, buffer):  # pragma: nocover
-        """To enable mock.patch on send() without hurting the debugger."""
         self._plc_socket.send(buffer)
 
     def _socket_recv(self):  # pragma: nocover
-        """To enable mock.patch on recv() without hurting the debugger."""
         return self._plc_socket.recv(BUFFER_SIZE)
 
     def _receive_bytes(self):
@@ -84,7 +82,7 @@ class Df1Plc(BasePlc):
             if buffer:
                 self._on_bytes_received(buffer)
             else:
-                self._plc_socket.close()
+                self._close_socket(self._plc_socket)
                 self._connected = False
                 self._on_disconnected()
 
@@ -92,10 +90,18 @@ class Df1Plc(BasePlc):
         plc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         plc_socket.settimeout(CONNECT_TIMEOUT)
         try:
-            plc_socket.connect(self._address)
+            self._connect_socket(plc_socket, self._address)
             self._connected = True
             self._plc_socket = plc_socket
         except (ConnectionError, socket.timeout, socket.error):
-            plc_socket.close()
-            time.sleep(1)
+            self._close_socket(plc_socket)
+            self._sleep()
 
+    def _connect_socket(self, plc_socket, address):  # pragma: nocover
+        plc_socket.connect(address)
+
+    def _close_socket(self, plc_socket):  # pragma: nocover
+        plc_socket.close()
+
+    def _sleep(self):  # pragma: nocover
+        time.sleep(1)

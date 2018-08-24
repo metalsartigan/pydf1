@@ -3,14 +3,16 @@ import random
 import threading
 import time
 
-from .models import frame_factory, ReplyAck, ReplyNak, BaseSimpleReply, Df1Plc
-from .models import ReplyEnq, ReplyTimeout, BaseDataFrame, InvalidLengthFrame
+from .models.receive_buffer import ReceiveBuffer
+from .models import frame_factory, ReplyAck, ReplyNak, Df1Plc
+from .models import ReplyEnq, ReplyTimeout, BaseDataFrame
 from .models.exceptions import SendReceiveError
 from .models.tx_symbol import TxSymbol
 
 
 class Df1Client:
     def __init__(self, *, src, dst, plc=None, history_size=20):
+        self.comm_history = deque(maxlen=history_size)
         self._src = src
         self._dst = dst
         self._plc = plc or Df1Plc()
@@ -22,7 +24,7 @@ class Df1Client:
         self._nak = ReplyNak()
         self._enq = ReplyEnq()
         self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
-        self.comm_history = deque(maxlen=history_size)
+        self._receive_buffer = ReceiveBuffer()
 
     def __enter__(self):
         return self
@@ -31,8 +33,7 @@ class Df1Client:
         if self._plc:
             self._plc.close()
 
-    def _get_initial_tns(self):
-        """To enable patch.object"""
+    def _get_initial_tns(self):  # pragma: nocover
         return random.randint(0, 0xffff)
 
     def _get_new_tns(self):
@@ -50,36 +51,44 @@ class Df1Client:
         self._plc.connect(address, port)
 
     def send_command(self, command):
-        self._message_send_loop(command)
-        return self._expect_message()
-
-    def _message_send_loop(self, command):
         """Doc page 4-6 Transmitter"""
         for __ in range(3):
             self.comm_history.append({'direction': 'out', 'command': command})
             self._plc.send_bytes(command.get_bytes())
             retry_send = False
-            for ___ in range(3):
-                reply = self._expect_reply()
+            got_ack = False
+            i = 0
+            while i < 3:
+                reply = self._expect_message()
                 if type(reply) is ReplyAck:
-                    return reply
+                    got_ack = True
+                    i = 0
                 elif type(reply) is ReplyNak:
                     command.tns = self._get_new_tns()
                     retry_send = True
                     break
                 elif type(reply) is ReplyTimeout or not reply.is_valid():
-                    self._send_enq()
+                    if got_ack:
+                        self._send_nak()
+                    else:
+                        self._send_enq()
+                elif got_ack:
+                    return reply
+                i += 1
             if not retry_send:
                 raise SendReceiveError()
         raise SendReceiveError()
 
     def _bytes_received(self, buffer):
         """Doc page 4-8"""
+        self._receive_buffer.extend(buffer)
+        for full_frame in self._receive_buffer.pop_left_frames():
+            self._process_frame_buffer(full_frame)
+
+    def _process_frame_buffer(self, buffer):
         message = frame_factory.parse(buffer)
         self.comm_history.append({'direction': 'in', 'command': message})
-        if type(message) == InvalidLengthFrame:
-            self._send_nak()
-        elif type(message) == ReplyEnq:
+        if type(message) == ReplyEnq:
             last_response_buffer = bytes(self._last_response)
             self.comm_history.append({'direction': 'out', 'command': frame_factory.parse(last_response_buffer)})
             self._plc.send_bytes(last_response_buffer)
@@ -94,13 +103,6 @@ class Df1Client:
             with self._message_sink_lock:
                 self._messages_sink.append(message)
             self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
-
-    def _expect_reply(self):
-        for __ in range(3):
-            message = self._expect_message()
-            if issubclass(type(message), BaseSimpleReply) or type(message) == ReplyTimeout:
-                return message
-        return ReplyTimeout()
 
     def _expect_message(self):
         for __ in range(4):

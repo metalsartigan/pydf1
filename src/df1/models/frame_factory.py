@@ -1,13 +1,9 @@
 from .tx_symbol import TxSymbol
-from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq, ReplyTimeout, InvalidLengthFrame
+from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq
 
 
 def parse(buffer):
-    if len(buffer) == 1 and buffer[0] == 0x00:
-        return ReplyTimeout()
-    elif len(buffer) != 2 and len(buffer) < 12:
-        return InvalidLengthFrame(buffer=buffer)
-    elif len(buffer) == 2:
+    if len(buffer) == 2:
         return _ack_catalog(buffer)
     else:
         return _frame_catalog(buffer)

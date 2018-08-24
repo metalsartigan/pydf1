@@ -1,12 +1,10 @@
 import socket
-import time
 import unittest
 
 from mock import patch
 
 from src.df1.models import Df1Plc
 from src.df1.models.exceptions import SendQueueOverflowError
-""" Apparemment on peut pas patcher socket.send et socket.recv quand on debug..."""
 
 
 class TestDf1Plc(unittest.TestCase):
@@ -30,8 +28,8 @@ class TestDf1Plc(unittest.TestCase):
         self.plc_has_disconnected = True
 
     @patch.object(Df1Plc, '_socket_recv')
-    @patch.object(socket.socket, 'close')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_close_socket')
+    @patch.object(Df1Plc, '_connect_socket')
     @patch.object(Df1Plc, '_socket_send')
     def test_send_disconnected(self, mock_send, *args):
         self.plc.connect('127.0.0.1', 666)
@@ -45,10 +43,10 @@ class TestDf1Plc(unittest.TestCase):
             first_positional_argument_after_self = mock_send.mock_calls[i][1][0]
             self.assertEqual(bytes([i]), first_positional_argument_after_self)
 
-    @patch.object(socket.socket, 'close')
+    @patch.object(Df1Plc, '_close_socket')
     @patch.object(Df1Plc, '_socket_recv')
     @patch.object(Df1Plc, '_socket_send')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_connect_socket')
     def test_send_disconnected_overflow(self, *args):
         self.plc.connect('127.0.0.1', 666)
         self.plc.close()
@@ -58,52 +56,60 @@ class TestDf1Plc(unittest.TestCase):
             self.plc.send_bytes(bytes([99]))
 
     @patch.object(Df1Plc, '_socket_recv')
-    @patch.object(socket.socket, 'close')
+    @patch.object(Df1Plc, '_close_socket')
     @patch.object(Df1Plc, '_socket_send')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_connect_socket')
     def test_send_bytes(self, mock_connect, mock_send, mock_close, mock_recv):
         self.plc.force_one_queue_send = True
         mock_recv.return_value = bytes()
         self.plc.connect('127.0.0.1', 666)
         self.plc.send_bytes(bytes([1, 2, 3, 4, 5]))
         self.plc.close()
-        mock_connect.assert_called_with(('127.0.0.1', 666))
+        self.assertEqual(('127.0.0.1', 666), mock_connect.mock_calls[0][1][1])
         mock_send.assert_called_with(bytes([1, 2, 3, 4, 5]))
         mock_close.assert_called()
         self.assertIsNone(self.received_data)
 
-    @patch.object(socket.socket, 'close')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_close_socket')
+    @patch.object(Df1Plc, '_connect_socket')
     @patch.object(Df1Plc, '_socket_recv')
     def test_receive_bytes(self, mock_recv, *args):
         expected = bytes([1, 2, 3, 4, 5])
         mock_recv.return_value = expected
         self.plc.connect('127.0.0.1', 666)
-        self.plc.close()
+        self.plc.close()  # join thread
         self.assertEqual(expected, self.received_data)
 
-    @patch.object(time, 'sleep')
-    @patch.object(socket.socket, 'close')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_sleep')
+    @patch.object(Df1Plc, '_close_socket')
+    @patch.object(Df1Plc, '_connect_socket')
     def test_connection_refused(self, mock_connect, *args):
         mock_connect.side_effect = ConnectionError()
         self.plc.connect('127.0.0.1', 666)
-        self.plc.close()
+        self.plc.close()  # join thread
         mock_connect.assert_called()
 
-    @patch.object(time, 'sleep')
-    @patch.object(socket.socket, 'close')
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_sleep')
+    @patch.object(Df1Plc, '_close_socket')
+    @patch.object(Df1Plc, '_connect_socket')
     def test_connection_timeout(self, mock_connect, *args):
         mock_connect.side_effect = socket.timeout()
         self.plc.connect('127.0.0.1', 666)
-        self.plc.close()
+        self.plc.close()  # join thread
         mock_connect.assert_called()
 
-    @patch.object(socket.socket, 'connect')
+    @patch.object(Df1Plc, '_connect_socket')
     @patch.object(Df1Plc, '_socket_recv')
     def test_connection_dropped(self, mock_recv, *args):
-        self.plc.connect('127.0.0.1', 666)
         mock_recv.return_value = bytes()
-        self.plc.close()
+        self.plc.connect('127.0.0.1', 666)
+        self.plc.close()  # join thread
+        self.assertTrue(self.plc_has_disconnected)
+
+    @patch.object(Df1Plc, '_connect_socket')
+    @patch.object(Df1Plc, '_socket_recv')
+    def test_connection_reset(self, mock_recv, *args):
+        mock_recv.side_effect = ConnectionResetError()
+        self.plc.connect('127.0.0.1', 666)
+        self.plc.close()  # join thread
         self.assertTrue(self.plc_has_disconnected)

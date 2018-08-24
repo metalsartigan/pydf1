@@ -24,6 +24,7 @@ class MockPlc(BasePlc):
         self.replies_nak = False
         self.does_not_reply = False
         self.always_replies_messages = False
+        self.replies_segmented = False
 
     def _init_tables(self):
         self._tables = [
@@ -94,7 +95,7 @@ class MockPlc(BasePlc):
             else:
                 self._reply(buffer)
         else:  # pragma: nocover
-            raise NotImplementedError()
+            raise NotImplementedError(buffer)
 
     def _reply(self, buffer):
         if buffer[1] == TxSymbol.ACK.value and self.replies_ack_timeout_once or self.replies_timeout:
@@ -108,7 +109,12 @@ class MockPlc(BasePlc):
             elif self.replies_invalid_length_frame_once:
                 self.replies_invalid_length_frame_once = False
                 buffer = buffer[:5]
-        self._on_bytes_received(bytes(buffer))
+        if self.replies_segmented:
+            half_index = int(len(buffer) / 2)
+            self._on_bytes_received(bytes(buffer[:half_index]))
+            self._on_bytes_received(bytes(buffer[half_index:]))
+        else:
+            self._on_bytes_received(bytes(buffer))
 
     def _ack(self):
         self._last_response = [TxSymbol.DLE.value, TxSymbol.ACK.value]

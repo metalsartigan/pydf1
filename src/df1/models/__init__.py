@@ -8,6 +8,5 @@ from .base_command import BaseCommand
 from .base_frame import BaseFrame
 from .reply_timeout import ReplyTimeout
 from .base_data_frame import BaseDataFrame
-from .invalid_length_frame import InvalidLengthFrame
 from .base_simple_reply import BaseSimpleReply
 from .df1_plc import Df1Plc
