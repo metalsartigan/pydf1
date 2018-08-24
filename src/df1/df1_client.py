@@ -105,11 +105,11 @@ class Df1Client:
             self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
 
     def _expect_message(self):
-        for __ in range(4):
+        for __ in range(40):
             with self._message_sink_lock:
                 if self._messages_sink:
                     return self._messages_sink.pop(0)
-            time.sleep(1)
+            time.sleep(0.1)
         return ReplyTimeout()
 
     def _send_ack(self):
