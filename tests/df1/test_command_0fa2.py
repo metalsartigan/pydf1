@@ -1,4 +1,4 @@
-from src.df1.models.command_0fa2 import Command0FA2
+from src.df1.models import Command0FA2
 from src.df1.models.file_type import FileType
 from .base_test_frame import BaseTestFrame
 

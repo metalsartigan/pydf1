@@ -4,7 +4,7 @@ from .file_type import FileType
 
 class Command0FA2(BaseCommand):
     """
-    protected typed logical read/write with three address fields, but without address sub elements
+    protected typed logical read with three address fields
     http://www.plctalk.net/qanda/showthread.php?t=1016
     """
     def init_with_params(self, *, bytes_to_read, table, file_type: FileType, start, **kwargs):
