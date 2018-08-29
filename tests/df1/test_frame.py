@@ -1,5 +1,6 @@
 from .base_test_frame import BaseTestFrame
 from .dummy_frames import FrameWithDleInData, FrameWithoutData, OfficialTestFrame, FrameFromBuffer
+from src.df1.models.sts_codes import StsCodes
 
 
 class TestFrame(BaseTestFrame):
@@ -78,3 +79,7 @@ class TestFrame(BaseTestFrame):
         expected = [0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x10, 0x10, 0x10, 0x10, 0xa1, 0x10, 0x3, 0xfd, 0xa7]
         self.assertEqual(expected, frame.buffer)
         self.assertTrue(frame.is_valid())
+
+    def test_get_sts(self):
+        frame = FrameWithoutData()
+        self.assertEqual(StsCodes.SUCCESS, frame.sts)

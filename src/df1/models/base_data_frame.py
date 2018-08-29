@@ -1,6 +1,7 @@
 from . import crc16
 from .base_frame import BaseFrame
-from . tx_symbol import TxSymbol
+from .tx_symbol import TxSymbol
+from .sts_codes import StsCodes
 
 
 class BaseDataFrame(BaseFrame):
@@ -12,7 +13,7 @@ class BaseDataFrame(BaseFrame):
         super().__init__(buffer=buffer)
 
     def init_with_params(self, cmd, src=0x0, dst=0x0, tns=0x0, data=[]):
-        app_layer_data = [dst, src, cmd, 0x0]
+        app_layer_data = [dst, src, cmd, StsCodes.SUCCESS.value]
         app_layer_data.extend(self._swap_endian(tns))
         app_layer_data.extend(data)
         self.___set_application_layer_data_and_crc(app_layer_data)
@@ -21,6 +22,12 @@ class BaseDataFrame(BaseFrame):
         crc = crc16.compute_crc(bytes(app_layer_data))
         self.buffer[-2:] = self._word2byte_list(crc)
         self.buffer[2:-4] = self.__sanitize_application_layer_data(app_layer_data)
+
+    @property
+    def sts(self):
+        app_layer_data = list(self.__get_unsanitized_application_layer_data())
+        sts = app_layer_data[3]
+        return StsCodes(sts)
 
     @property
     def tns(self):
