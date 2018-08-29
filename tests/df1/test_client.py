@@ -3,9 +3,10 @@ from mock import patch
 from unittest import TestCase
 
 from src.df1.df1_client import Df1Client
-from src.df1.models import Command0FA2, ReplyAck, Reply4f, ReplyNak, ReplyEnq
+from src.df1.commands import Command0FA2
+from src.df1.models import ReplyAck, Reply4f, ReplyNak, ReplyEnq
 from src.df1.models.exceptions import SendReceiveError
-from src.df1.models.file_type import FileType
+from src.df1.file_type import FileType
 from .mocks.mock_plc import MockPlc
 
 

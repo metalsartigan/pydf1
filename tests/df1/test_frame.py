@@ -1,6 +1,6 @@
 from .base_test_frame import BaseTestFrame
 from .dummy_frames import FrameWithDleInData, FrameWithoutData, OfficialTestFrame, FrameFromBuffer
-from src.df1.models.sts_codes import StsCodes
+from src.df1.sts_codes import StsCodes
 
 
 class TestFrame(BaseTestFrame):

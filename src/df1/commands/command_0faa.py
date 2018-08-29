@@ -1,5 +1,5 @@
-from .base_command import BaseCommand
-from .file_type import FileType
+from src.df1.models.base_command import BaseCommand
+from src.df1.file_type import FileType
 
 
 class Command0FAA(BaseCommand):

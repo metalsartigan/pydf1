@@ -1,7 +1,7 @@
 from . import crc16
 from .base_frame import BaseFrame
 from .tx_symbol import TxSymbol
-from .sts_codes import StsCodes
+from src.df1.sts_codes import StsCodes
 
 
 class BaseDataFrame(BaseFrame):

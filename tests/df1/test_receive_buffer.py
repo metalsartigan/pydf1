@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-from src.df1.models import Command0FA2, ReplyAck, ReplyEnq, ReplyNak
-from src.df1.models.file_type import FileType
+from src.df1.commands import Command0FA2
+from src.df1.models import ReplyAck, ReplyEnq, ReplyNak
+from src.df1.file_type import FileType
 from src.df1.models.receive_buffer import ReceiveBuffer
 
 

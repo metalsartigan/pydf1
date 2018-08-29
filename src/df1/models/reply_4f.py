@@ -1,5 +1,5 @@
 from .base_data_frame import BaseDataFrame
-from .file_type import FileType
+from src.df1.file_type import FileType
 
 
 class Reply4f(BaseDataFrame):

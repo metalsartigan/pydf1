@@ -1,6 +1,4 @@
 from .base_plc import BasePlc
-from .command_0fa2 import Command0FA2
-from .command_0faa import Command0FAA
 from .reply_ack import ReplyAck
 from .reply_nak import ReplyNak
 from .reply_4f import Reply4f
