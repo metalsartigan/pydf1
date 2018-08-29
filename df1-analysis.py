@@ -12,12 +12,12 @@ def do():
     with Df1Client(src=0x0, dst=0x1) as client:
         client.connect('192.168.5.41', 10232)
         while True:
-            command = client.create_command(Command0FA2, table=45, start=0, bytes_to_read=100, file_type=FileType.INTEGER)
+            command = client.create_command(Command0FA2, table=43, start=245, bytes_to_read=10, file_type=FileType.BIT)
             reply = client.send_command(command)
-            print(reply.get_data(FileType.INTEGER))
-            command = client.create_command(Command0FA2, table=45, start=50, bytes_to_read=100, file_type=FileType.INTEGER)
-            reply = client.send_command(command)
-            print(reply.get_data(FileType.INTEGER))
+            print(reply.get_data(FileType.BIT))
+            #command = client.create_command(Command0FA2, table=43, start=50, bytes_to_read=100, file_type=FileType.INTEGER)
+            #reply = client.send_command(command)
+            #print(reply.get_data(FileType.INTEGER))
             print()
 
     sys.exit()
@@ -32,7 +32,7 @@ def write():
         reply = client.send_command(command)
         pass
 
-write()
+#write()
 
 do()
 

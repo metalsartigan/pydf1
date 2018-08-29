@@ -12,8 +12,8 @@ class Command0FAA(BaseCommand):
             bytes_to_write = [b for i in data_to_write for b in self._swap_endian(i)]
         else:  # pragma: nocover
             raise NotImplementedError()
-        if start > 0xfe or start_sub > 0xfe:  # pragma: nocover
-            raise NotImplementedError("Start index and start sub element higher than 0xfe not supported yet.")
+        if start > 0xfe or start_sub > 0xfe or table > 0xfe:  # pragma: nocover
+            raise NotImplementedError("Table, start, and start sub higher than 0xfe not supported yet.")
         data = [len(bytes_to_write), table, file_type.value, start, start_sub]
         data.extend(bytes_to_write)
         super().init_with_params(cmd=0x0f, fnc=0xaa, command_data=data, **kwargs)
