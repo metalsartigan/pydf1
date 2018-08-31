@@ -1,9 +1,13 @@
-from abc import ABC
+# -*- coding: utf-8 -*-
+
+from abc import ABCMeta
 
 
-class BaseFrame(ABC):
+class BaseFrame:
+    __metaclass__ = ABCMeta
+
     def __init__(self, buffer=[]):
         self.buffer = list(buffer)
 
-    def get_bytes(self) -> bytes:
-        return bytes(self.buffer)
+    def get_bytes(self):
+        return bytearray(self.buffer)

@@ -1,16 +1,18 @@
+# -*- coding: utf-8 -*-
+
 from . import crc16
 from .base_frame import BaseFrame
 from .tx_symbol import TxSymbol
-from src.df1.sts_codes import StsCodes
+from ..sts_codes import StsCodes
 
 
 class BaseDataFrame(BaseFrame):
-    def __init__(self, *, buffer=None):
+    def __init__(self, buffer=None):
         if not buffer:
             buffer = [TxSymbol.DLE.value, TxSymbol.STX.value]
             buffer.extend([0x00] * 6)
             buffer.extend([TxSymbol.DLE.value, TxSymbol.ETX.value, 0x00, 0x00])
-        super().__init__(buffer=buffer)
+        super(BaseDataFrame, self).__init__(buffer=buffer)
 
     def init_with_params(self, cmd, src=0x0, dst=0x0, tns=0x0, data=[]):
         app_layer_data = [dst, src, cmd, StsCodes.SUCCESS.value]
@@ -19,7 +21,7 @@ class BaseDataFrame(BaseFrame):
         self.___set_application_layer_data_and_crc(app_layer_data)
 
     def ___set_application_layer_data_and_crc(self, app_layer_data):
-        crc = crc16.compute_crc(bytes(app_layer_data))
+        crc = crc16.compute_crc(bytearray(app_layer_data))
         self.buffer[-2:] = self._word2byte_list(crc)
         self.buffer[2:-4] = self.__sanitize_application_layer_data(app_layer_data)
 
@@ -56,7 +58,7 @@ class BaseDataFrame(BaseFrame):
 
     def is_valid(self):
         app_layer_data = self.__get_unsanitized_application_layer_data()
-        crc = crc16.compute_crc(bytes(app_layer_data))
+        crc = crc16.compute_crc(bytearray(app_layer_data))
         expected = self._word2byte_list(crc)
         return expected == self.buffer[-2:]
 

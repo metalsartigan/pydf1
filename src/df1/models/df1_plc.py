@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import select
 import socket
+import errno
 import threading
 import time
 from collections import deque
@@ -16,7 +19,7 @@ SEND_QUEUE_SIZE = 100
 
 class Df1Plc(BasePlc):
     def __init__(self):
-        super().__init__()
+        super(Df1Plc, self).__init__()
         self._socket_thread = None
         self._loop = False
         self._address = None
@@ -40,7 +43,7 @@ class Df1Plc(BasePlc):
             self._socket_thread.join()
             self._socket_thread = None
 
-    def send_bytes(self, buffer: bytes):
+    def send_bytes(self, buffer):
         with self._send_queue_lock:
             if len(self.send_queue) >= SEND_QUEUE_SIZE:
                 raise SendQueueOverflowError()
@@ -77,8 +80,11 @@ class Df1Plc(BasePlc):
         if in_sockets:
             try:
                 buffer = self._socket_recv()
-            except ConnectionResetError:
-                buffer = bytes()
+            except socket.error as e:  # TODO: python 3 ConnectionResetError
+                if e.errno == errno.ECONNRESET:
+                    buffer = bytearray()
+                else: # pragma: nocover
+                    raise
             if buffer:
                 self._on_bytes_received(buffer)
             else:
@@ -93,7 +99,7 @@ class Df1Plc(BasePlc):
             self._connect_socket(plc_socket, self._address)
             self._connected = True
             self._plc_socket = plc_socket
-        except (ConnectionError, socket.timeout, socket.error):
+        except (socket.timeout, socket.error):  # TODO: python 3 add ConnectionError
             self._close_socket(plc_socket)
             self._sleep()
 

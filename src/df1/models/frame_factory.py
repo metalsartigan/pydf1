@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .tx_symbol import TxSymbol
 from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq
 
@@ -10,11 +12,11 @@ def parse(buffer):
 
 
 def _ack_catalog(buffer):
-    if buffer == bytes([TxSymbol.DLE.value, TxSymbol.ACK.value]):
+    if buffer == bytearray([TxSymbol.DLE.value, TxSymbol.ACK.value]):
         return ReplyAck()
-    elif buffer == bytes([TxSymbol.DLE.value, TxSymbol.NAK.value]):
+    elif buffer == bytearray([TxSymbol.DLE.value, TxSymbol.NAK.value]):
         return ReplyNak()
-    elif buffer == bytes([TxSymbol.DLE.value, TxSymbol.ENQ.value]):
+    elif buffer == bytearray([TxSymbol.DLE.value, TxSymbol.ENQ.value]):
         return ReplyEnq()
     else:
         raise NotImplementedError("This two bytes frame is not implemented: %s" % buffer)  # pragma: nocover

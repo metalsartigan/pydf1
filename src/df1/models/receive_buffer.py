@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
+
 from .tx_symbol import TxSymbol
 
 
 class ReceiveBuffer:
     def __init__(self):
         self._buffer = bytearray()
-        self._dle_stx_bytes = bytes([TxSymbol.DLE.value, TxSymbol.STX.value])
-        self._dle_etx_bytes = bytes([TxSymbol.DLE.value, TxSymbol.ETX.value])
-        self._dle_ack_bytes = bytes([TxSymbol.DLE.value, TxSymbol.ACK.value])
-        self._dle_enq_bytes = bytes([TxSymbol.DLE.value, TxSymbol.ENQ.value])
-        self._dle_nak_bytes = bytes([TxSymbol.DLE.value, TxSymbol.NAK.value])
+        self._dle_stx_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.STX.value])
+        self._dle_etx_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ETX.value])
+        self._dle_ack_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ACK.value])
+        self._dle_enq_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ENQ.value])
+        self._dle_nak_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.NAK.value])
 
     def __len__(self):
         return len(self._buffer)
@@ -41,7 +43,7 @@ class ReceiveBuffer:
                     del self._buffer[:next_system_dle_index]
                     clean = False
 
-    def _find_next_system_dle(self, *, start=0):
+    def _find_next_system_dle(self, start=0):
         indexes = [
             self._buffer.find(self._dle_stx_bytes, start),
             self._buffer.find(self._dle_ack_bytes, start),

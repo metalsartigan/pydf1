@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import abc
 
 
-class BasePlc(abc.ABC):
+class BasePlc:
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         self.bytes_received = []
         self.disconnected = []
@@ -21,4 +25,4 @@ class BasePlc(abc.ABC):
     def close(self): pass  # pragma: nocover
 
     @abc.abstractmethod
-    def send_bytes(self, buffer: bytes): pass
+    def send_bytes(self, buffer): pass  # pragma: nocover

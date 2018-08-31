@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
+
 from .base_data_frame import BaseDataFrame
-from src.df1.file_type import FileType
+from ..file_type import FileType
 
 
 class Reply4f(BaseDataFrame):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(Reply4f, self).__init__(**kwargs)
 
     def init_with_params(self, dst, src, tns, data):
-        super().init_with_params(src=src, dst=dst, cmd=0x4f, tns=tns, data=data)
+        super(Reply4f, self).init_with_params(src=src, dst=dst, cmd=0x4f, tns=tns, data=data)
 
     def get_data(self, file_type):
         if file_type == FileType.INTEGER:

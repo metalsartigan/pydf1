@@ -1,12 +1,14 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 
-from src.df1.models import Reply4f
-from src.df1.file_type import FileType
+from df1.models import Reply4f
+from df1.file_type import FileType
 
 
 class TestReply4f(unittest.TestCase):
     def setUp(self):
-        super().setUp()
+        super(TestReply4f, self).setUp()
         self.reply = Reply4f()
         self.reply.init_with_params(dst=0x01, src=0x00, tns=0x1234, data=range(0x4))
 

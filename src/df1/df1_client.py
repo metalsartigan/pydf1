@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from collections import deque
 import random
 import threading
@@ -11,7 +13,7 @@ from .models.tx_symbol import TxSymbol
 
 
 class Df1Client:
-    def __init__(self, *, src, dst, plc=None, history_size=20):
+    def __init__(self, src, dst, plc=None, history_size=20):
         self.comm_history = deque(maxlen=history_size)
         self._src = src
         self._dst = dst
@@ -89,7 +91,7 @@ class Df1Client:
         message = frame_factory.parse(buffer)
         self.comm_history.append({'direction': 'in', 'command': message})
         if type(message) == ReplyEnq:
-            last_response_buffer = bytes(self._last_response)
+            last_response_buffer = bytearray(self._last_response)
             self.comm_history.append({'direction': 'out', 'command': frame_factory.parse(last_response_buffer)})
             self._plc.send_bytes(last_response_buffer)
         elif issubclass(type(message), BaseDataFrame):

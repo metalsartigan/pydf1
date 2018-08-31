@@ -1,18 +1,20 @@
+# -*- coding: utf-8 -*-
+
 import time
 from mock import patch
 from unittest import TestCase
 
-from src.df1.df1_client import Df1Client
-from src.df1.commands import Command0FA2
-from src.df1.models import ReplyAck, Reply4f, ReplyNak, ReplyEnq
-from src.df1.models.exceptions import SendReceiveError
-from src.df1.file_type import FileType
-from .mocks.mock_plc import MockPlc
+from df1.df1_client import Df1Client
+from df1.commands import Command0FA2
+from df1.models import ReplyAck, Reply4f, ReplyNak, ReplyEnq
+from df1.models.exceptions import SendReceiveError
+from df1.file_type import FileType
+from .mocks import MockPlc
 
 
 class TestClient(TestCase):
     def setUp(self):
-        super().setUp()
+        super(TestClient, self).setUp()
         self.plc = MockPlc()
         self._init_mock_tns()
         self.client = Df1Client(plc=self.plc, src=0x0, dst=0x1)
@@ -39,7 +41,7 @@ class TestClient(TestCase):
             mock_new_tns.return_value = 0x1
             command = self.client.create_command(Command0FA2, bytes_to_read=0x2,
                                                  table=0x01, file_type=FileType.INTEGER, start=0x01)
-        expected = bytes([0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x1, 0x0, 0xa2, 0x02, 0x01, 0x89, 0x01, 0x00,
+        expected = bytearray([0x10, 0x2, 0x1, 0x0, 0xf, 0x0, 0x1, 0x0, 0xa2, 0x02, 0x01, 0x89, 0x01, 0x00,
                           0x10, 0x03, 0xbb, 0x70])
         actual = command.get_bytes()
         self.assertEqual(expected, actual)

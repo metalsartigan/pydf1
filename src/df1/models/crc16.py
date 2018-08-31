@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #        File: CRC16.PY
 #              CRC-16 (reverse) table lookup for Modbus or DF1
 #        http://cms.digi.com/resources/documentation/digidocs/90001537/references/r_python_crc16_modbus.htm

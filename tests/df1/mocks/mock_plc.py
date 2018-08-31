@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
+
 import socket
 
-from src.df1.models.base_plc import BasePlc
-from src.df1.models.reply_4f import Reply4f
-from src.df1.models.tx_symbol import TxSymbol
+from df1.models.base_plc import BasePlc
+from df1.models.reply_4f import Reply4f
+from df1.models.tx_symbol import TxSymbol
 
 
 class MockPlc(BasePlc):
     def __init__(self):
-        super().__init__()
+        super(MockPlc, self).__init__()
         self.connected = False
         self._init_tables()
         self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
@@ -47,7 +49,7 @@ class MockPlc(BasePlc):
             if self.sends_corrupt_enq_next:
                 self.sends_corrupt_enq_next = False
                 self._last_response = [TxSymbol.DLE.value, TxSymbol.NAK.value]
-                self._on_bytes_received(bytes([0x00]))
+                self._on_bytes_received(bytearray([0x00]))
             else:
                 self._reply(self._last_response)
                 if self._last_message and self._last_response == [TxSymbol.DLE.value, TxSymbol.ACK.value]:
@@ -62,8 +64,8 @@ class MockPlc(BasePlc):
                 self.force_bad_crc_once = False
                 buffer = list(buffer)
                 buffer[-2:] = [0x00, 0x00]
-                buffer = bytes(buffer)
-            if buffer[-2:] == bytes([0x00, 0x00]) or self.replies_nak:  # forced bad CRC
+                buffer = bytearray(buffer)
+            if buffer[-2:] == bytearray([0x00, 0x00]) or self.replies_nak:  # forced bad CRC
                 self._nak()
             elif self.message_sink_is_full_for_next_nb_commands:
                 self.message_sink_is_full_for_next_nb_commands -= 1
@@ -111,10 +113,10 @@ class MockPlc(BasePlc):
                 buffer = buffer[:5]
         if self.replies_segmented:
             half_index = int(len(buffer) / 2)
-            self._on_bytes_received(bytes(buffer[:half_index]))
-            self._on_bytes_received(bytes(buffer[half_index:]))
+            self._on_bytes_received(bytearray(buffer[:half_index]))
+            self._on_bytes_received(bytearray(buffer[half_index:]))
         else:
-            self._on_bytes_received(bytes(buffer))
+            self._on_bytes_received(bytearray(buffer))
 
     def _ack(self):
         self._last_response = [TxSymbol.DLE.value, TxSymbol.ACK.value]

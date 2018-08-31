@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
+
 from unittest import TestCase
 
-from src.df1.commands import Command0FA2
-from src.df1.models import ReplyAck, ReplyEnq, ReplyNak
-from src.df1.file_type import FileType
-from src.df1.models.receive_buffer import ReceiveBuffer
+from df1.commands import Command0FA2
+from df1.models import ReplyAck, ReplyEnq, ReplyNak
+from df1.file_type import FileType
+from df1.models.receive_buffer import ReceiveBuffer
 
 
 class TestReceiveBuffer(TestCase):
     def setUp(self):
-        super().setUp()
+        super(TestReceiveBuffer, self).setUp()
         self.buffer = ReceiveBuffer()
         self._init_cmd_bytes()
         self._init_replies_bytes()
@@ -24,22 +26,22 @@ class TestReceiveBuffer(TestCase):
         self.nak_bytes = ReplyNak().get_bytes()
 
     def test_extend(self):
-        self.buffer.extend(bytes([1, 2, 3, 4]))
-        self.buffer.extend(bytes([5, 6]))
+        self.buffer.extend(bytearray([1, 2, 3, 4]))
+        self.buffer.extend(bytearray([5, 6]))
         self.assertEqual(bytearray([1, 2, 3, 4, 5, 6]), self.buffer._buffer)
 
     def test_len(self):
         self.assertEqual(0, len(self.buffer))
-        self.buffer.extend(bytes([1, 2, 3, 4]))
+        self.buffer.extend(bytearray([1, 2, 3, 4]))
         self.assertEqual(4, len(self.buffer))
 
     def test_pop_frames(self):
-        self.buffer.extend(bytes([2, 3, 4]))
+        self.buffer.extend(bytearray([2, 3, 4]))
         self.buffer.extend(self.cmd_bytes)
-        self.buffer.extend(bytes([5, 6, 7]))
+        self.buffer.extend(bytearray([5, 6, 7]))
         self.buffer.extend(self.cmd_bytes)
         self.buffer.extend(self.cmd_bytes)
-        self.buffer.extend(bytes([8, 9, 10]))
+        self.buffer.extend(bytearray([8, 9, 10]))
         frames = self._pop_frames()
         self.assertEqual(0, len(self.buffer._buffer))
         self.assertEqual(3, len(frames))

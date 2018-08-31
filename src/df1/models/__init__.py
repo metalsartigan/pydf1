@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .base_plc import BasePlc
 from .reply_ack import ReplyAck
 from .reply_nak import ReplyNak
