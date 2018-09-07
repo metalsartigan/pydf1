@@ -33,24 +33,29 @@ def write():
 
 #write()
 
-do()
+#do()
 
 
-sys.exit()
+#sys.exit()
 
-def read_reply():
-    data2 = targetHostSocket.recv(4096)
-    print([hex(c)[2:] for c in data2])
+import socket
 
 
 targetHostSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 targetHostSocket.connect(('192.168.5.41', 10232))
+
+def read_reply():
+    data2 = targetHostSocket.recv(4096)
+    print(1, [hex(c)[2:] for c in data2])
+
+
 #targetHostSocket.send(bytes([0x10, 0x02, 0x01, 0x00, 0x0f, 0x00, 0x1, 0x0, 0xa2, 0x14, 0x07, 0x89, 0x00, 0x00, 0x10, 0x03, 0xd2, 0xb5]))
+targetHostSocket.send(bytearray([16, 2, 1, 0, 15, 0, 236, 57, 162, 80, 64, 137, 80, 0, 16, 3, 137, 54]))
 
-#read_reply()
-#read_reply()
+read_reply()
+read_reply()
 
-#sys.exit()
+sys.exit()
 
 while 1:
     targetHostSocket.send(bytearray([0x10, 0x2, 0x1, 0x0, 0x6, 0x0, 0x6b, 0xc3, 0x1, 0x0, 0x0, 0xb, 0x10, 0x3, 0x9e, 0x58]))

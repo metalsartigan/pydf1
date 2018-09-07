@@ -83,6 +83,7 @@ class Df1Client:
 
     def _bytes_received(self, buffer):
         """Doc page 4-8"""
+        print(999, buffer)
         self._receive_buffer.extend(buffer)
         for full_frame in self._receive_buffer.pop_left_frames():
             self._process_frame_buffer(full_frame)

@@ -11,6 +11,7 @@ class ReceiveBuffer:
         self._dle_ack_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ACK.value])
         self._dle_enq_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ENQ.value])
         self._dle_nak_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.NAK.value])
+        self._dle_dle_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.DLE.value])
 
     def __len__(self):
         return len(self._buffer)
@@ -37,20 +38,35 @@ class ReceiveBuffer:
             self._clean_receive_buffer_start()
             clean = True
             if len(self._buffer) >= 2 and self._buffer[:2] == self._dle_stx_bytes:
-                next_system_dle_index = self._find_next_system_dle(start=2)
+                next_system_dle_index = self._find_next_system_dle(after_initial_stx=True)
                 next_dle_etx_index = self._buffer.find(self._dle_etx_bytes, 2)
                 if 0 <= next_system_dle_index < next_dle_etx_index:
                     del self._buffer[:next_system_dle_index]
                     clean = False
 
-    def _find_next_system_dle(self, start=0):
+    def _find_next_system_dle(self, after_initial_stx=False):
+        def find_in_buffer(sub_bytes):
+            if after_initial_stx:
+                return self._find_escaped(sub_bytes)
+            else:
+                return self._buffer.find(sub_bytes)
         indexes = [
-            self._buffer.find(self._dle_stx_bytes, start),
-            self._buffer.find(self._dle_ack_bytes, start),
-            self._buffer.find(self._dle_enq_bytes, start),
-            self._buffer.find(self._dle_nak_bytes, start)
+            find_in_buffer(self._dle_stx_bytes),
+            find_in_buffer(self._dle_ack_bytes),
+            find_in_buffer(self._dle_enq_bytes),
+            find_in_buffer(self._dle_nak_bytes)
         ]
         return min([i for i in indexes if i >= 0] or [-1])
+
+    def _find_escaped(self, sub_bytes):
+        i = 2
+        while i < len(self._buffer):
+            if self._buffer[i:i + 2] == self._dle_dle_bytes:
+                i += 2
+            elif self._buffer[i:i + len(sub_bytes)] == sub_bytes:
+                return i
+            else:
+                i += 1
 
     def _clean_receive_buffer_start(self):
         if self._buffer:
