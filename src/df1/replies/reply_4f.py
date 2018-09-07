@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .base_data_frame import BaseDataFrame
-from ..file_type import FileType
+from df1.models.base_data_frame import BaseDataFrame
+from df1.file_type import FileType
 
 
 class Reply4f(BaseDataFrame):

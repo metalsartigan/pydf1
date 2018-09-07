@@ -3,9 +3,9 @@
 from unittest import TestCase
 
 from df1.commands import Command0FA2
-from df1.models import ReplyAck, ReplyEnq, ReplyNak
 from df1.file_type import FileType
 from df1.models.receive_buffer import ReceiveBuffer
+from df1.replies import ReplyAck, ReplyEnq, ReplyNak
 
 
 class TestReceiveBuffer(TestCase):

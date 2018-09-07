@@ -6,7 +6,7 @@ from unittest import TestCase
 
 from df1.df1_client import Df1Client
 from df1.commands import Command0FA2, Command0FAA
-from df1.models import ReplyAck, Reply4f, ReplyNak, ReplyEnq
+from df1.replies import ReplyAck, Reply4f, ReplyNak, ReplyEnq
 from df1.models.exceptions import SendReceiveError
 from df1.file_type import FileType
 from .mocks import MockPlc

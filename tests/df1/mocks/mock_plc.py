@@ -3,7 +3,7 @@
 import socket
 
 from df1.models.base_plc import BasePlc
-from df1.models.reply_4f import Reply4f
+from df1.replies.reply_4f import Reply4f
 from df1.models.tx_symbol import TxSymbol
 
 

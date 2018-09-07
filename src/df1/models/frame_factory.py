@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .tx_symbol import TxSymbol
-from . import ReplyAck, ReplyNak, Reply4f, ReplyEnq
+from df1.replies import ReplyAck, ReplyNak, Reply4f, ReplyEnq
 
 
 def parse(buffer):

@@ -5,11 +5,11 @@ import random
 import threading
 import time
 
-from .models.receive_buffer import ReceiveBuffer
-from .models import frame_factory, ReplyAck, ReplyNak, Df1Plc
-from .models import ReplyEnq, ReplyTimeout, BaseDataFrame
+from .models import frame_factory, Df1Plc, ReplyTimeout, BaseDataFrame
 from .models.exceptions import SendReceiveError
+from .models.receive_buffer import ReceiveBuffer
 from .models.tx_symbol import TxSymbol
+from .replies import ReplyAck, ReplyNak, ReplyEnq
 
 
 class Df1Client:

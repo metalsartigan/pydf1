@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .base_simple_reply import BaseSimpleReply
-from .tx_symbol import TxSymbol
+from df1.models.tx_symbol import TxSymbol
 
 
 class ReplyNak(BaseSimpleReply):
