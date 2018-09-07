@@ -63,8 +63,11 @@ class Df1Client:
             while i < 3:
                 reply = self._expect_message()
                 if type(reply) is ReplyAck:
-                    got_ack = True
-                    i = 0
+                    if command.expect_reply:
+                        got_ack = True
+                        i = 0
+                    else:
+                        return reply
                 elif type(reply) is ReplyNak:
                     command.tns = self._get_new_tns()
                     retry_send = True

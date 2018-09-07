@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from df1.models.base_command import BaseCommand
+from df1.commands.base_command import BaseCommand
 
 
 class OfficialTestFrame(BaseCommand):
@@ -8,4 +8,4 @@ class OfficialTestFrame(BaseCommand):
     def __init__(self):
         super(BaseCommand, self).__init__()
         data = [0x00] * 11
-        self.init_with_params(dst=0x07, src=0x11, cmd=0x41, tns=0xb953, fnc=0x0, command_data=data)
+        self.init_with_params(expect_reply=False, dst=0x07, src=0x11, cmd=0x41, tns=0xb953, fnc=0x0, command_data=data)

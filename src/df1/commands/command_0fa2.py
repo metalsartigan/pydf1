@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from df1.models.base_command import BaseCommand
+from .base_command import BaseCommand
 
 
 class Command0FA2(BaseCommand):
@@ -12,4 +12,4 @@ class Command0FA2(BaseCommand):
         if start > 0xfe or start_sub > 0xfe or table > 0xfe:  # pragma: nocover
             raise NotImplementedError("Table, start and start sub higher than 0xfe not supported yet.")
         data = [bytes_to_read, table, file_type.value, start, start_sub]
-        super(Command0FA2, self).init_with_params(cmd=0x0f, fnc=0xa2, command_data=data, **kwargs)
+        super(Command0FA2, self).init_with_params(expect_reply=True, cmd=0x0f, fnc=0xa2, command_data=data, **kwargs)

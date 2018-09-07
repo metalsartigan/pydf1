@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from .base_data_frame import BaseDataFrame
+from df1.models.base_data_frame import BaseDataFrame
 
 
 class BaseCommand(BaseDataFrame):
     def __init__(self):
+        self.expect_reply = False
         super(BaseCommand, self).__init__()
 
-    def init_with_params(self, cmd, fnc=None, command_data=[], **kwargs):
+    def init_with_params(self, expect_reply, cmd, fnc=None, command_data=[], **kwargs):
+        self.expect_reply = expect_reply
         data = list(command_data)
         if fnc is not None:
             data.insert(0, fnc)

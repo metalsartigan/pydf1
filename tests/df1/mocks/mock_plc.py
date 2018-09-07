@@ -96,6 +96,8 @@ class MockPlc(BasePlc):
                 self.dont_reply_data_frame = False
             else:
                 self._reply(buffer)
+        elif buffer[4] == 0x0f and buffer[8] == 0xaa:
+            pass  # no more reply for write command
         else:  # pragma: nocover
             raise NotImplementedError(buffer)
 
