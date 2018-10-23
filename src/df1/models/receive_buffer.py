@@ -38,35 +38,20 @@ class ReceiveBuffer:
             self._clean_receive_buffer_start()
             clean = True
             if len(self._buffer) >= 2 and self._buffer[:2] == self._dle_stx_bytes:
-                next_system_dle_index = self._find_next_system_dle(after_initial_stx=True)
-                next_dle_etx_index = self._buffer.find(self._dle_etx_bytes, 2)
+                next_system_dle_index = self._find_next_system_dle(start=2)
+                next_dle_etx_index = self._find_dle_xxx(TxSymbol.ETX, 2)
                 if 0 <= next_system_dle_index < next_dle_etx_index:
                     del self._buffer[:next_system_dle_index]
                     clean = False
 
-    def _find_next_system_dle(self, after_initial_stx=False):
-        def find_in_buffer(sub_bytes):
-            if after_initial_stx:
-                return self._find_escaped(sub_bytes)
-            else:
-                return self._buffer.find(sub_bytes)
+    def _find_next_system_dle(self, start=0):
         indexes = [
-            find_in_buffer(self._dle_stx_bytes),
-            find_in_buffer(self._dle_ack_bytes),
-            find_in_buffer(self._dle_enq_bytes),
-            find_in_buffer(self._dle_nak_bytes)
+            self._find_dle_xxx(TxSymbol.STX, start),
+            self._find_dle_xxx(TxSymbol.ACK, start),
+            self._find_dle_xxx(TxSymbol.ENQ, start),
+            self._find_dle_xxx(TxSymbol.NAK, start)
         ]
         return min([i for i in indexes if i >= 0] or [-1])
-
-    def _find_escaped(self, sub_bytes):
-        i = 2
-        while i < len(self._buffer):
-            if self._buffer[i:i + 2] == self._dle_dle_bytes:
-                i += 2
-            elif self._buffer[i:i + len(sub_bytes)] == sub_bytes:
-                return i
-            else:
-                i += 1
 
     def _clean_receive_buffer_start(self):
         if self._buffer:
@@ -80,19 +65,28 @@ class ReceiveBuffer:
     def _get_full_frame_position(self):
         indexes = [
             self._get_stx_etx_frame_position(),
-            self._get_short_reply_position(self._dle_ack_bytes),
-            self._get_short_reply_position(self._dle_enq_bytes),
-            self._get_short_reply_position(self._dle_nak_bytes)
+            self._get_short_reply_position(TxSymbol.ACK),
+            self._get_short_reply_position(TxSymbol.ENQ),
+            self._get_short_reply_position(TxSymbol.NAK)
         ]
         return next((i for i in indexes if i is not None), None)
 
-    def _get_short_reply_position(self, reply_bytes):
-        index = self._buffer.find(reply_bytes, 0)
+    def _get_short_reply_position(self, symbol):
+        index = self._find_dle_xxx(symbol)
         if index >= 0:
             return index, index + 2
 
     def _get_stx_etx_frame_position(self):
-        dle_stx_index = self._buffer.find(self._dle_stx_bytes, 0)
-        dle_etx_index = self._buffer.find(self._dle_etx_bytes, 0)
+        dle_stx_index = self._find_dle_xxx(TxSymbol.STX)
+        dle_etx_index = self._find_dle_xxx(TxSymbol.ETX)
         if dle_stx_index >= 0 and dle_etx_index >= 0 and len(self._buffer) >= (dle_etx_index + 4):
             return dle_stx_index, dle_etx_index + 4
+
+    def _find_dle_xxx(self, symbol, start=0):
+        last_char_was_dle = False
+        for i, c in enumerate(self._buffer):
+            if i >= start:
+                if last_char_was_dle and c == symbol.value:
+                    return i - 1
+                last_char_was_dle = not last_char_was_dle and c == TxSymbol.DLE.value
+        return -1
