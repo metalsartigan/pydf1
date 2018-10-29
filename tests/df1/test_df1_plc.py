@@ -13,7 +13,6 @@ class TestDf1Plc(unittest.TestCase):
     def setUp(self):
         super(TestDf1Plc, self).setUp()
         self.plc = Df1Plc()
-        self.plc.force_one_socket_thread_loop = True
         self.received_data = None
         self.plc_has_disconnected = False
         self.plc.bytes_received.append(self._receive_data)
@@ -38,6 +37,7 @@ class TestDf1Plc(unittest.TestCase):
         self.plc.close()
         for i in range(4):
             self.plc.send_bytes(bytearray([i]))
+        self.assertEqual(0, mock_send.call_count)
         self.plc.connect('127.0.0.1', 666)
         self.plc.close()
         self.assertEqual(4, mock_send.call_count)
@@ -62,7 +62,6 @@ class TestDf1Plc(unittest.TestCase):
     @patch.object(Df1Plc, '_socket_send')
     @patch.object(Df1Plc, '_connect_socket')
     def test_send_bytes(self, mock_connect, mock_send, mock_close, mock_recv):
-        self.plc.force_one_queue_send = True
         mock_recv.return_value = bytearray()
         self.plc.connect('127.0.0.1', 666)
         self.plc.send_bytes(bytearray([1, 2, 3, 4, 5]))
@@ -118,3 +117,12 @@ class TestDf1Plc(unittest.TestCase):
         self.plc.connect('127.0.0.1', 666)
         self.plc.close()  # join thread
         self.assertTrue(self.plc_has_disconnected)
+
+    @patch.object(Df1Plc, '_connect_socket')
+    @patch.object(Df1Plc, '_socket_recv')
+    @patch.object(Df1Plc, '_wait_for_thread')
+    def test_thread_start_timeout(self, mock_wait, *args):
+        mock_wait.return_value = False
+        from df1.models.exceptions import ThreadError
+        with self.assertRaisesRegexp(ThreadError, "could not be started"):
+            self.plc.connect('127.0.0.1', 666)

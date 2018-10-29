@@ -6,14 +6,15 @@ import errno
 import threading
 import time
 from collections import deque
-from threading import Thread
+from threading import Event, Thread
 
 from . import BasePlc
-from .exceptions import SendQueueOverflowError
+from .exceptions import SendQueueOverflowError, ThreadError
 
 BUFFER_SIZE = 4096
 RECEIVE_TIMEOUT = 1
 CONNECT_TIMEOUT = 5
+THREAD_START_TIMEOUT = 2
 SEND_QUEUE_SIZE = 100
 
 
@@ -25,10 +26,10 @@ class Df1Plc(BasePlc):
         self._address = None
         self._connected = False
         self._plc_socket = None
-        self.force_one_socket_thread_loop = False
-        self.force_one_queue_send = False
         self.send_queue = deque()
         self._send_queue_lock = threading.Lock()
+        self._ready = Event()
+        self._new_bytes_to_send = False
 
     def connect(self, address, port):
         if not self._socket_thread:
@@ -36,6 +37,11 @@ class Df1Plc(BasePlc):
             self._loop = True
             self._socket_thread = Thread(target=self._socket_loop, name="Socket thread")
             self._socket_thread.start()
+            if not self._wait_for_thread():
+                raise ThreadError("Socket thread could not be started.")
+
+    def _wait_for_thread(self):  # pragma: nocover
+        return self._ready.wait(THREAD_START_TIMEOUT)
 
     def close(self):
         if self._socket_thread:
@@ -49,10 +55,14 @@ class Df1Plc(BasePlc):
                 raise SendQueueOverflowError()
             else:
                 self.send_queue.append(buffer)
+                self._new_bytes_to_send = True
 
     def _socket_loop(self):
-        while self._loop or self.force_one_socket_thread_loop or self.force_one_queue_send:
-            self.force_one_socket_thread_loop = False
+        ready_set = False
+        while self._loop or self._new_bytes_to_send:
+            if not ready_set:
+                self._ready.set()
+                self.ready_set = True
             if not self._connected:
                 self._create_connected_socket()
             if self._connected:  # reevaluate after connection
@@ -67,7 +77,7 @@ class Df1Plc(BasePlc):
             while self.send_queue:
                 buffer = self.send_queue.popleft()
                 self._socket_send(buffer)
-                self.force_one_queue_send = False
+            self._new_bytes_to_send = False
 
     def _socket_send(self, buffer):  # pragma: nocover
         self._plc_socket.send(buffer)
