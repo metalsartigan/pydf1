@@ -18,4 +18,4 @@ class Command0FAA(BaseCommand):
             raise NotImplementedError("Table, start, and start sub higher than 0xfe not supported yet.")
         data = [len(bytes_to_write), table, file_type.value, start, start_sub]
         data.extend(bytes_to_write)
-        super(Command0FAA, self).init_with_params(expect_reply=False, cmd=0x0f, fnc=0xaa, command_data=data, **kwargs)
+        super(Command0FAA, self).init_with_params(cmd=0x0f, fnc=0xaa, command_data=data, **kwargs)

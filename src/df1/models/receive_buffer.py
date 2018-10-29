@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+from collections import deque
 
 from .tx_symbol import TxSymbol
 
 
 class ReceiveBuffer:
     def __init__(self):
+        self.buffer_history = deque(maxlen=2500)
+
         self._buffer = bytearray()
         self._dle_stx_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.STX.value])
         self._dle_etx_bytes = bytearray([TxSymbol.DLE.value, TxSymbol.ETX.value])
@@ -19,6 +22,7 @@ class ReceiveBuffer:
     def extend(self, other_bytes):
         if len(self._buffer) < 4096:
             self._buffer.extend(other_bytes)
+            self.buffer_history.extend(other_bytes)
         else:
             raise OverflowError()
 

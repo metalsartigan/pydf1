@@ -68,9 +68,11 @@ class TestClient(TestCase):
     def test_normal_message_transfer_write(self):
         """Doc page 4-10"""
         self.client.send_command(self.cmd_write)
-        self.assertEquals(2, len(self.client.comm_history))
+        self.assertEquals(4, len(self.client.comm_history))
         self._assert_command(Command0FAA, 'out', 0)
         self._assert_command(ReplyAck, 'in', 1)
+        self._assert_command(Reply4f, 'in', 2)
+        self._assert_command(ReplyAck, 'out', 3)
 
     def _assert_command(self, command_type, direction, index):
         cmd = self.client.comm_history[index]

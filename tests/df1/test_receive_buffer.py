@@ -100,3 +100,20 @@ class TestReceiveBuffer(TestCase):
         self.assertEqual(1, len(frames))
         self.assertEqual(self.cmd_bytes, frames[0])
         self.assertEqual(0, len(self.buffer._buffer))
+
+    def test_buffer_history(self):
+        self.buffer.extend(bytearray([2, 3, 4]))
+        self.buffer.extend(self.cmd_bytes)
+        self.buffer.extend(bytearray([5, 6, 7]))
+        self.buffer.extend(self.cmd_bytes)
+        self.buffer.extend(self.cmd_bytes)
+        self.buffer.extend(bytearray([8, 9, 10]))
+        self._pop_frames()
+
+        cmd_length = len(self.cmd_bytes)
+        expected = cmd_length * 3 + 3 * 3
+        self.assertEqual(expected, len(self.buffer.buffer_history))
+
+    def test_buffer_history_overflow(self):
+        self.buffer.extend(self.cmd_bytes * 2500)
+        self.assertEqual(2500, len(self.buffer.buffer_history))

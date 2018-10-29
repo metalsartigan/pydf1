@@ -97,7 +97,12 @@ class MockPlc(BasePlc):
             else:
                 self._reply(buffer)
         elif buffer[4] == 0x0f and buffer[8] == 0xaa:
-            pass  # no more reply for write command
+            tns = buffer[6] & 0xff + buffer[7] << 8
+            reply = Reply4f()
+            reply.init_with_params(dst=buffer[1], src=buffer[2], tns=tns, data=[])
+            buffer = reply.get_bytes()
+            self._last_message = buffer
+            self._reply(buffer)
         else:  # pragma: nocover
             raise NotImplementedError(buffer)
 
