@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='df1',
-    version='0.4',
+    version='0.5',
     packages=setuptools.find_packages(),
     url='',
     license='MIT License',

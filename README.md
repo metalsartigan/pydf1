@@ -7,6 +7,7 @@ Make sure the `setup.py` file is up to date with at least the current version.
 Then, in the `src` folder:
 
 ```
+rm dist/*
 python2 setup.py bdist_wheel
 twine upload dist/*
 ```

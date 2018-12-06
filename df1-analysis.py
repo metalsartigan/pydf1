@@ -3,21 +3,28 @@
 import sys
 
 from df1.df1_client import Df1Client
-from df1.commands import Command0FAA, Command0FA2
+from df1.commands import Command0FAA, Command0FA2, Command0FABSingleBit
 from df1.file_type import FileType
 
 
 def do():
     with Df1Client(src=0x0, dst=0x1) as client:
         client.connect('192.168.5.41', 10232)
-        while True:
-            command = client.create_command(Command0FA2, table=43, start=245, bytes_to_read=10, file_type=FileType.INTEGER)
+        for __ in range(5):
+            command = client.create_command(Command0FABSingleBit, table=7, file_type=FileType.INTEGER, start=30, bit_position=0, bit_value=True)
             reply = client.send_command(command)
-            print(reply.get_data(FileType.INTEGER))
-            #command = client.create_command(Command0FA2, table=43, start=50, bytes_to_read=100, file_type=FileType.INTEGER)
-            #reply = client.send_command(command)
-            #print(reply.get_data(FileType.INTEGER))
+            print('write:', reply)
+    
+            command = client.create_command(Command0FA2, bytes_to_read=2, table=7, file_type=FileType.INTEGER, start=30)
+            reply = client.send_command(command)
+            bts = reply.get_bytes()
+            bts = [hex(c) for c in bts]
+            print('read:', bts)
             print()
+
+        #command = client.create_command(Command0FA2, table=43, start=50, bytes_to_read=100, file_type=FileType.INTEGER)
+        #reply = client.send_command(command)
+        #print(reply.get_data(FileType.INTEGER))
 
     sys.exit()
 
@@ -33,10 +40,10 @@ def write():
 
 #write()
 
-#do()
+do()
 
 
-#sys.exit()
+sys.exit()
 
 import socket, select
 
