@@ -1,7 +1,8 @@
-#metal_etl#
-Metal Sartigan packages for Extract-transform-load
+# pydf1
 
-###Build and release###
+See src folder for usage instructions.
+
+### Build and release
 Make sure the `setup.py` file is up to date with at least the current version.
 
 Then, in the `src` folder:
