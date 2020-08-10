@@ -1,6 +1,6 @@
 # pydf1
 
-See src folder for usage instructions.
+See src folder for usage instructions and license.
 
 ### Build and release
 Make sure the `setup.py` file is up to date with at least the current version.
