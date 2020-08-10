@@ -8,7 +8,7 @@ setup(
     name='df1',
     version='0.5',
     packages=setuptools.find_packages(),
-    url='',
+    url='https://github.com/metalsartigan/pydf1',
     license='MIT License',
     author='Jerther',
     author_email='jtheriault@metalsartigan.com',
