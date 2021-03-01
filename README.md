@@ -1,3 +1,10 @@
+This is the original project and is no longer maintained.
+
+There is an active fork with python3 support, serial connection support and other improvements. Check it out:
+
+https://github.com/reyanvaldes/pydf1
+
+
 # pydf1
 
 See src folder for usage instructions and license.
